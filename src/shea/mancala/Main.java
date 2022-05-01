@@ -1,3 +1,9 @@
+/*
+All board code came from Shea Bunge at the github repository https://github.com/sheabunge/mancala-java
+Our code further this by implementing AI.
+ */
+
+
 package shea.mancala;
 
 import javax.swing.JFrame;

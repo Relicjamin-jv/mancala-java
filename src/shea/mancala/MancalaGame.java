@@ -5,7 +5,9 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Random;
 
+import javax.sound.midi.Soundbank;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
@@ -23,6 +25,8 @@ class MancalaGame extends JPanel implements MouseListener {
 	 */
 	final Board board;
 
+	private int turnNumber = 0;
+
 	/**
 	 * Defines the amount of stones in the pits
 	 */
@@ -33,6 +37,11 @@ class MancalaGame extends JPanel implements MouseListener {
 	 * Cannot be any number besides 1 or 2
 	 */
 	private int currentPlayer = 1;
+
+	/**
+	 * Player 2 will be the AI if this boolean is set to true
+	 */
+	private boolean AI = true;
 
 	/**
 	 * Determines when the game is won and who by
@@ -92,10 +101,11 @@ class MancalaGame extends JPanel implements MouseListener {
 	 */
 	protected boolean moveStones(final int pit) {
 		int pointer = pit;
+		System.out.println(pit);
 
 		// return if pit has no stones
 		if ( pitStones[pit] < 1 ) {
-			return true;
+			return true;  //true means go again
 		}
 
 		// take stones out of pit
@@ -131,6 +141,7 @@ class MancalaGame extends JPanel implements MouseListener {
 		}
 
 		// return true if the turn ended in storage pit
+		printTheBoard();
 		return pointer == 6;
 	}
 
@@ -138,7 +149,8 @@ class MancalaGame extends JPanel implements MouseListener {
 	 * Begin the other player's turn
 	 */
 	public void switchTurn() {
-
+	// If the AI is present
+	if(!AI) {
 		// Change the active player
 		currentPlayer = getOtherPlayer();
 
@@ -149,6 +161,31 @@ class MancalaGame extends JPanel implements MouseListener {
 
 		pitStones = newStones;
 		repaint();
+	}else{ //There is an AI
+		currentPlayer = getOtherPlayer(); //return player 2 which in this case is the AI
+
+		// Reverse the pit positions
+		int[] newStones = new int[14];  //need to reverse the pits to comply with logic
+		System.arraycopy(pitStones, 7, newStones, 0, 7);
+		System.arraycopy(pitStones, 0, newStones, 7, 7);
+
+		pitStones = newStones;
+		repaint();
+
+		//Code for the AI
+		if(getCurrentPlayer() == 2) {
+			AILogic();
+		}
+	}
+
+	}
+
+	//run the AI code here for min max
+	public void AILogic(){
+		Random rand = new Random();
+		int randomIndex = rand.nextInt(6) + 1;
+		System.out.println("The AI is picking index: " + randomIndex);
+		doPlayerTurn(randomIndex); //doing the player
 	}
 
 	/**
@@ -269,6 +306,7 @@ class MancalaGame extends JPanel implements MouseListener {
 
 		// perform the player's action
 		boolean	result = moveStones(pit);
+		System.out.println(result + " Player " + getCurrentPlayer() + " move");
 
 		// make sure that a player hasn't run out of stones
 		checkForWin();
@@ -276,6 +314,9 @@ class MancalaGame extends JPanel implements MouseListener {
 		// change the player if the current turn is ended
 		if ( ! result && winningPlayer < 0 ) {
 			switchTurn();
+		}else if(AI) {
+			//if the AI is player 2 we want to go ahead and make another AI move
+			AILogic();
 		}
 	}
 
@@ -299,6 +340,27 @@ class MancalaGame extends JPanel implements MouseListener {
 				doPlayerTurn(pit);
 			}
 		}
+	}
+
+	public void printTheBoard(){
+		turnNumber++;
+		System.out.println("Mancala Turn " + turnNumber + ", Player: " + getCurrentPlayer());
+		System.out.print("  "); //spacing
+		//print out the top player
+		for(int i = 5; i >= 0; i--){
+			System.out.print(pitStones[i] + " ");
+		}
+		System.out.println();
+
+		//print out the mancala pits
+		System.out.println(pitStones[6] + "             " + pitStones[13]);
+		System.out.print("  "); //Spacenig
+		//print out the bottom player
+		for(int i = 7; i < 13; i++){
+			System.out.print(pitStones[i] + " ");
+		}
+
+		System.out.println("\n");
 	}
 
 	@Override public void mouseEntered(MouseEvent e) {}
