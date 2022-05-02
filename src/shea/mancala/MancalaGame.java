@@ -6,8 +6,6 @@ import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Random;
-
-import javax.sound.midi.Soundbank;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
