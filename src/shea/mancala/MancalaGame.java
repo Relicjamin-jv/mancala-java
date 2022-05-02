@@ -5,7 +5,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.Random;
+import java.util.ArrayList;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
@@ -144,6 +144,57 @@ class MancalaGame extends JPanel implements MouseListener {
 	}
 
 	/**
+	 * Perform a player's turn by moving the stones between pits
+	 * @param pit the pit selected by the user
+	 * @return whether the user's turn is ended
+	 */
+	protected boolean moveStonesChild(final int pit, int[] childBoard) {
+		int pointer = pit;
+		System.out.println(pit);
+
+		// return if pit has no stones
+		if ( childBoard[pit] < 1 ) {
+			return true;  //true means go again
+		}
+
+		// take stones out of pit
+		int stones = childBoard[pit];
+		childBoard[pit] = 0;
+
+		while ( stones > 0 ) {
+			++pointer;
+
+			// skip other player's storage pit and reset pointer
+			if (pointer == 13) {
+				pointer = 0;
+			} else {
+				childBoard[pointer]++;
+				stones--;
+			}
+
+			repaint();
+		}
+
+		// set to point to the opposite pit
+		int inversePointer = -pointer + 12;
+
+		// Check for capture
+		if (pointer < 6 && childBoard[pointer] == 1 && childBoard[inversePointer] > 0) {
+
+			// Transfer this stone along with opposite pit's stones to store
+			childBoard[6] += childBoard[inversePointer] + 1;
+
+			// Clear the pits
+			childBoard[pointer] = 0;
+			childBoard[inversePointer] = 0;
+		}
+
+		// return true if the turn ended in storage pit
+		printTheBoard();
+		return pointer == 6;
+	}
+
+	/**
 	 * Begin the other player's turn
 	 */
 	public void switchTurn() {
@@ -191,14 +242,52 @@ class MancalaGame extends JPanel implements MouseListener {
 	/*
 	*	logic from: https://www.youtube.com/watch?v=8r78GYmuHaY
 	 */
-	public int alphaBeta(int[] pitStones, int depth, int alpha, int beta, boolean isMax){
+	public int alphaBeta(int[] pitStones, int depth, int alpha, int beta, boolean isMax, int[] currBoard){
+		int move; //move for this instance of alphaBeta
+		int score; //score for this node
 		if(checkForWin()){
 			return -1;
 		}else if (depth==0){
 			return heuristicStoneCompare();
 		}
+		//get all the children nodes for this
+		ArrayList<int[]> childrenBoard = getChildren(currBoard); //takes in the board of this instance and returns all children, or all possible moves
 
 	}
+
+	public ArrayList<int[]> getChildren(int[] currBoard){
+		//need to get all possible moves, this will be done by first makeing a copy of the currBoard. Making a move on whatever player turn it is
+		ArrayList<int[]> allChildernBoards = new ArrayList<>();
+		//if player one
+		if(getCurrentPlayer() == 1){
+			for(int i = 0; i < 6; i++){
+				//make a new array list
+				int[] childBoard = new int[currBoard.length]; //allocates an appr. size array for this children
+				copy(currBoard, childBoard); //copies the board
+				//the curr player moves are always in the 0-5 position
+				if(currBoard[i] != 0) { //there needs to be stone to move for a child to be created
+ 					moveStonesChild(i, childBoard); //moves the child for the specific board being passes in, doesn't change the orginal board that is passed in
+					allChildernBoards.add(childBoard);
+				}
+			}
+		}
+		return allChildernBoards;
+	}
+
+	/**
+	 * Copies a to b
+	 * @param a - the original array
+	 * @param b - the new array
+	 * @return b
+	 */
+	public void copy(int[] a, int[] b){
+		for(int i = 0; i < a.length; i++){
+			b[i] = a[i];
+		}
+	}
+
+
+
 
 
 	/*
@@ -217,7 +306,7 @@ class MancalaGame extends JPanel implements MouseListener {
 		}
 		int enemyStones=0;
 		for (int i = 7; i < pitStones.length;i++) {
-			if(i==6) {
+			if(i==13) {
 				enemyStones+=pitStones[i] * 1.5;
 			}else {
 				enemyStones+=pitStones[i];
@@ -290,7 +379,7 @@ class MancalaGame extends JPanel implements MouseListener {
 	 */
 	public boolean checkForWin() {
 		boolean topRowEmpty = true, bottomRowEmpty = true;
-
+		boolean returnBoolean = false;
 		// Check if the bottom row contains any stones
 		for (int i = 0; i < 6; ++i) {
 			if (pitStones[i] > 0) {
@@ -309,6 +398,7 @@ class MancalaGame extends JPanel implements MouseListener {
 
 		// Take the stones from the non-empty row and add them to that player's store
 		if (topRowEmpty || bottomRowEmpty) {
+			returnBoolean = true;
 			if (topRowEmpty && ! bottomRowEmpty) {
 				for (int i = 0; i < 6; ++i) {
 					pitStones[6] += pitStones[i];
@@ -333,7 +423,7 @@ class MancalaGame extends JPanel implements MouseListener {
 
 			removeMouseListener(this);
 		}
-		return (topRowEmpty || bottomRowEmpty);
+		return returnBoolean;
 
 	}
 
