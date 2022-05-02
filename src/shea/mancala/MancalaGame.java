@@ -30,7 +30,7 @@ class MancalaGame extends JPanel implements MouseListener {
 	/**
 	 * Defines the amount of stones in the pits
 	 */
-	private int[] pitStones = new int[] { 4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0 };
+	public int[] pitStones = new int[] { 4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0 };
 
 	/**
 	 * The player currently having a turn.
@@ -182,10 +182,50 @@ class MancalaGame extends JPanel implements MouseListener {
 
 	//run the AI code here for min max
 	public void AILogic(){
-		Random rand = new Random();
-		int randomIndex = rand.nextInt(6) + 1;
-		System.out.println("The AI is picking index: " + randomIndex);
-		doPlayerTurn(randomIndex); //doing the player
+//		Random rand = new Random();
+//		int randomIndex = rand.nextInt(6) + 1;
+//		System.out.println("The AI is picking index: " + randomIndex);
+//		doPlayerTurn(randomIndex); //doing the player
+
+
+	}
+
+	/*
+	*	logic from: https://www.youtube.com/watch?v=8r78GYmuHaY
+	 */
+	public int alphaBeta(int[] pitStones, int depth, int alpha, int beta, boolean isMax){
+		if(checkForWin()){
+			return -1;
+		}else if (depth==0){
+			return heuristicStoneCompare();
+		}
+
+	}
+
+
+	/*
+	* Returns value representing the goodness of the board for the current player
+	* positive/ high values are favorable for current player
+	* negative/ low values are unfavorable for current player
+	*/
+	public int heuristicStoneCompare() {
+		int yourStones=0;
+		for (int i = 0; i < pitStones.length/2;i++) {
+			if(i==6) {
+				yourStones+=pitStones[i] * 1.5;
+			}else {
+				yourStones+=pitStones[i];
+			}
+		}
+		int enemyStones=0;
+		for (int i = 7; i < pitStones.length;i++) {
+			if(i==6) {
+				enemyStones+=pitStones[i] * 1.5;
+			}else {
+				enemyStones+=pitStones[i];
+			}
+		}
+		return yourStones - enemyStones;
 	}
 
 	/**
@@ -248,9 +288,9 @@ class MancalaGame extends JPanel implements MouseListener {
 	}
 
 	/**
-	 * Check if a player has won the game
+	 * Check if either player has won the game
 	 */
-	public void checkForWin() {
+	public boolean checkForWin() {
 		boolean topRowEmpty = true, bottomRowEmpty = true;
 
 		// Check if the bottom row contains any stones
@@ -295,6 +335,7 @@ class MancalaGame extends JPanel implements MouseListener {
 
 			removeMouseListener(this);
 		}
+		return (topRowEmpty || bottomRowEmpty);
 
 	}
 
