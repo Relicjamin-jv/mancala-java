@@ -144,7 +144,7 @@ class MancalaGame extends JPanel implements MouseListener {
         }
 
         // return true if the turn ended in storage pit
-        printTheBoard();
+        //printTheBoard();
         return pointer == 6;
     }
 
@@ -191,14 +191,14 @@ class MancalaGame extends JPanel implements MouseListener {
             childBoard[pointer] = 0;
             childBoard[inversePointer] = 0;
         }
-        System.out.println("Moving index: " + childBoard[childBoard.length - 1]);
-        for (int i = 0; i < 14; i++) {
-            System.out.print(childBoard[i] + " ");
-            if (i == 6) {
-                System.out.println();
-            }
-        }
-        System.out.println("\n");
+//        System.out.println("Moving index: " + childBoard[childBoard.length - 1]);
+//        for (int i = 0; i < 14; i++) {
+//            System.out.print(childBoard[i] + " ");
+//            if (i == 6) {
+//                System.out.println();
+//            }
+//        }
+//        System.out.println("\n");
 
         return pointer == 6;
     }
@@ -244,7 +244,7 @@ class MancalaGame extends JPanel implements MouseListener {
 //		int randomIndex = rand.nextInt(6) + 1;
 //		System.out.println("The AI is picking index: " + randomIndex);
 //		doPlayerTurn(randomIndex); //doing the player
-        int move = alphaBeta(10, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true, pitStones);
+        int move = alphaBeta(12, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true, pitStones);
         System.out.println("The Ai is making the move: " + move);
         if (move >= 0) {
             doPlayerTurn(move);
@@ -261,6 +261,7 @@ class MancalaGame extends JPanel implements MouseListener {
             return -1;
         } else if (depth == 0) {
             int scoreH = heuristicStoneCompare(currBoard);
+            System.out.println("Score for this board is: " + scoreH);
             for (int i = 0; i < 14; i++) {
                 System.out.print(currBoard[i] + " ");
                 if (i == 6) {
@@ -271,7 +272,7 @@ class MancalaGame extends JPanel implements MouseListener {
             return scoreH;
         }
         //get all the children nodes for this
-        ArrayList<int[]> childrenBoard = getChildren(currBoard); //takes in the board of this instance and returns all children, or all possible moves
+        ArrayList<int[]> childrenBoard = getChildren(currBoard, isMax); //takes in the board of this instance and returns all children, or all possible moves
 
         if (isMax) {
             score = Double.NEGATIVE_INFINITY;
@@ -319,22 +320,35 @@ class MancalaGame extends JPanel implements MouseListener {
 
     /**
      * @param currBoard
-     * @param AI        - AI turn or not
      * @return
      */
-    public ArrayList<int[]> getChildren(int[] currBoard) {
+    public ArrayList<int[]> getChildren(int[] currBoard, boolean isMax) {
         //need to get all possible moves, this will be done by first making a copy of the currBoard. Making a move on whatever player turn it is
         ArrayList<int[]> allChildrenBoards = new ArrayList<>();
 
-        for (int i = 0; i < 6; i++) {
-            //make a new array list
-            if (currBoard[i] != 0) { //there needs to be stone to move for a child to be created
-                int[] childBoard = new int[currBoard.length + 1]; //allocates an appr. size array for this children, the last index is what pit was chosen to move
-                childBoard[currBoard.length] = i;
-                copy(currBoard, childBoard); //copies the board
-                //the curr player moves are always in the 0-5 position
-                moveStonesChild(i, childBoard); //moves the child for the specific board being passes in, doesn't change the original board that is passed in
-                allChildrenBoards.add(childBoard);
+        if(isMax) {
+            for (int i = 0; i < 6; i++) {
+                //make a new array list
+                if (currBoard[i] != 0) { //there needs to be stone to move for a child to be created
+                    int[] childBoard = new int[currBoard.length + 1]; //allocates an appr. size array for this children, the last index is what pit was chosen to move
+                    childBoard[currBoard.length] = i;
+                    copy(currBoard, childBoard); //copies the board
+                    //the curr player moves are always in the 0-5 position
+                    moveStonesChild(i, childBoard); //moves the child for the specific board being passes in, doesn't change the original board that is passed in
+                    allChildrenBoards.add(childBoard);
+                }
+            }
+        }else{
+            for (int i = 7; i < 13; i++) {
+                //make a new array list
+                if (currBoard[i] != 0) { //there needs to be stone to move for a child to be created
+                    int[] childBoard = new int[currBoard.length + 1]; //allocates an appr. size array for this children, the last index is what pit was chosen to move
+                    childBoard[currBoard.length] = i;
+                    copy(currBoard, childBoard); //copies the board
+                    //the curr player moves are always in the 0-5 position
+                    moveStonesChild(i, childBoard); //moves the child for the specific board being passes in, doesn't change the original board that is passed in
+                    allChildrenBoards.add(childBoard);
+                }
             }
         }
 
@@ -371,7 +385,7 @@ class MancalaGame extends JPanel implements MouseListener {
         }
         int enemyStones = 0;
         for (int i = 7; i < 14; i++) {
-            if (i == 14) {
+            if (i == 13) {
                 enemyStones += board[i] * 2;
             } else {
                 enemyStones += board[i];
